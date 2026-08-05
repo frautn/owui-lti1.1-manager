@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OWUI(lti) Mgr</title>
+  <style>
+    :root {
+      --bg-1: #f4f1ea;
+      --bg-2: #d8ebe2;
+      --ink: #1f2937;
+      --accent: #0f766e;
+      --card: #ffffffee;
+      --border: #0f766e33;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+      color: var(--ink);
+      min-height: 100vh;
+      background: radial-gradient(circle at 20% 10%, var(--bg-2), var(--bg-1) 60%);
+      display: grid;
+      place-items: center;
+      padding: 1rem;
+    }
+
+    .card {
+      width: min(920px, 100%);
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      box-shadow: 0 15px 50px #0f766e20;
+      overflow: hidden;
+      animation: rise 450ms ease-out;
+    }
+
+    header {
+      padding: 1.25rem 1.5rem;
+      background: linear-gradient(140deg, #0f766e, #0d9488);
+      color: #fff;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 1.4rem;
+      letter-spacing: 0.03em;
+    }
+
+    header p {
+      margin: 0.35rem 0 0;
+      opacity: 0.9;
+      font-size: 0.95rem;
+    }
+
+    .content {
+      padding: 1.25rem 1.5rem 1.5rem;
+    }
+
+    .meta {
+      margin: 0 0 1rem;
+      line-height: 1.6;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.95rem;
+      background: #fff;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    th,
+    td {
+      text-align: left;
+      padding: 0.65rem 0.75rem;
+      border-bottom: 1px solid #e5e7eb;
+      vertical-align: top;
+      word-break: break-word;
+    }
+
+    th {
+      width: 32%;
+      font-weight: 700;
+      color: #334155;
+      background: #f8fafc;
+    }
+
+    tr:last-child th,
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    .empty {
+      margin: 0;
+      padding: 1rem;
+      border-radius: 10px;
+      background: #fff7ed;
+      border: 1px solid #fdba74;
+      color: #9a3412;
+    }
+
+    @keyframes rise {
+      from {
+        transform: translateY(14px);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="card">
+    {% block content %}{% endblock %}  
+  </main>
+</body>
+</html>

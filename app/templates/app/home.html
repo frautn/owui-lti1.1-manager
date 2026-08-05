@@ -1,155 +1,149 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>LTI Launch Home</title>
-  <style>
-    :root {
-      --bg-1: #f4f1ea;
-      --bg-2: #d8ebe2;
-      --ink: #1f2937;
-      --accent: #0f766e;
-      --card: #ffffffee;
-      --border: #0f766e33;
-    }
+{% extends 'app/base.html' %}
 
-    * {
-      box-sizing: border-box;
-    }
-
-    body {
-      margin: 0;
-      font-family: "Trebuchet MS", "Segoe UI", sans-serif;
-      color: var(--ink);
-      min-height: 100vh;
-      background: radial-gradient(circle at 20% 10%, var(--bg-2), var(--bg-1) 60%);
-      display: grid;
-      place-items: center;
-      padding: 1rem;
-    }
-
-    .card {
-      width: min(920px, 100%);
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 18px;
-      box-shadow: 0 15px 50px #0f766e20;
-      overflow: hidden;
-      animation: rise 450ms ease-out;
-    }
-
-    header {
-      padding: 1.25rem 1.5rem;
-      background: linear-gradient(140deg, #0f766e, #0d9488);
-      color: #fff;
-    }
-
-    header h1 {
-      margin: 0;
-      font-size: 1.4rem;
-      letter-spacing: 0.03em;
-    }
-
-    header p {
-      margin: 0.35rem 0 0;
-      opacity: 0.9;
-      font-size: 0.95rem;
-    }
-
-    .content {
-      padding: 1.25rem 1.5rem 1.5rem;
-    }
-
-    .meta {
-      margin: 0 0 1rem;
-      line-height: 1.6;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 0.95rem;
-      background: #fff;
-      border-radius: 10px;
-      overflow: hidden;
-    }
-
-    th,
-    td {
-      text-align: left;
-      padding: 0.65rem 0.75rem;
-      border-bottom: 1px solid #e5e7eb;
-      vertical-align: top;
-      word-break: break-word;
-    }
-
-    th {
-      width: 32%;
-      font-weight: 700;
-      color: #334155;
-      background: #f8fafc;
-    }
-
-    tr:last-child th,
-    tr:last-child td {
-      border-bottom: none;
-    }
-
-    .empty {
-      margin: 0;
-      padding: 1rem;
-      border-radius: 10px;
-      background: #fff7ed;
-      border: 1px solid #fdba74;
-      color: #9a3412;
-    }
-
-    @keyframes rise {
-      from {
-        transform: translateY(14px);
-        opacity: 0;
-      }
-      to {
-        transform: translateY(0);
-        opacity: 1;
-      }
-    }
-  </style>
-</head>
-<body>
-  <main class="card">
+{% block content %}
     <header>
-      <h1>Moodle LTI Launch</h1>
-      <p>You are signed in through an LTI 1.1 launch.</p>
+      <h1>{{ site_name }} | {{ course_title }}</h1>
+      <p>
+        {{ user.get_full_name|default:user.username }}
+        | <a href="{% url 'logout' %}" style="color: #e6fffa; font-weight: 700;">Sign out</a>
+      </p>
     </header>
     <section class="content">
-      <p class="meta">
-        Signed in as <strong>{{ user.get_full_name|default:user.username }}</strong>
-        {% if user.email %}({{ user.email }}){% endif %}
-      </p>
+
+      <style>
+        .panel {
+          background: #ffffff;
+          border: 1px solid #dbe7e3;
+          border-radius: 12px;
+          padding: 1rem;
+          margin-bottom: 1rem;
+        }
+
+        .panel h2 {
+          margin: 0 0 0.75rem;
+          font-size: 1.05rem;
+          color: #1e293b;
+        }
+
+        .picker {
+          display: flex;
+          gap: 0.6rem;
+          align-items: center;
+          flex-wrap: wrap;
+          margin-top: 0.6rem;
+        }
+
+        .picker select {
+          min-width: 320px;
+          max-width: 100%;
+          border: 1px solid #cbd5e1;
+          border-radius: 10px;
+          padding: 0.6rem 0.7rem;
+          font: inherit;
+        }
+
+        .picker button {
+          border: 0;
+          border-radius: 10px;
+          padding: 0.62rem 0.9rem;
+          font: inherit;
+          font-weight: 700;
+          color: #ffffff;
+          background: #0f766e;
+          cursor: pointer;
+        }
+
+        .subtle {
+          margin: 0.4rem 0 0;
+          color: #64748b;
+          font-size: 0.92rem;
+        }
+      </style>
 
       {% if launch_data %}
-        <table>
-          <thead>
-            <tr>
-              <th>Launch Field</th>
-              <th>Value</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for key, value in launch_data.items %}
+        <div class="panel">
+          <h2>Current LTI Context</h2>
+          {% if selected_context %}
+            <table>
+              <tbody>
+                <tr>
+                  <th>Moodle Site</th>
+                  <td>{{ selected_context.moodle_site }}</td>
+                </tr>
+                <tr>
+                  <th>Course ID</th>
+                  <td>{{ selected_context.course_id }}</td>
+                </tr>
+                <tr>
+                  <th>Course Title</th>
+                  <td>{{ selected_context.course_title|default:"(not provided)" }}</td>
+                </tr>
+              </tbody>
+            </table>
+          {% else %}
+            <p class="empty">Launch data exists, but Moodle site/course identifiers are missing.</p>
+          {% endif %}
+        </div>
+
+        <div class="panel">
+          <h2>Launch Payload</h2>
+          <table>
+            <thead>
               <tr>
-                <th>{{ key }}</th>
-                <td>{{ value }}</td>
+                <th>Launch Field</th>
+                <th>Value</th>
               </tr>
-            {% endfor %}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {% for key, value in launch_data.items %}
+                <tr>
+                  <th>{{ key }}</th>
+                  <td>{{ value }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
       {% else %}
-        <p class="empty">No LTI launch data found in session.</p>
+        <div class="panel">
+          <h2>Select a Course</h2>
+          {% if course_contexts %}
+            <p>Choose a Moodle site/course context from previous LTI launches.</p>
+            <form method="get" class="picker">
+              <select name="course_context" aria-label="Select a course context">
+                <option value="">Select a course...</option>
+                {% for ctx in course_contexts %}
+                  <option value="{{ ctx.id }}" {% if selected_context and selected_context.id == ctx.id %}selected{% endif %}>
+                    {% if ctx.custom_moodle_site %}{{ ctx.custom_moodle_site }}{% else %}{{ ctx.moodle_site }}{% endif %} | {{ ctx.course_title|default:ctx.course_id }}
+                  </option>
+                {% endfor %}
+              </select>
+              <button type="submit">Load Context</button>
+            </form>
+
+            {% if selected_context %}
+              <p class="subtle">Selected context details:</p>
+              <table>
+                <tbody>
+                  <tr>
+                    <th>Moodle Site</th>
+                    <td>{{ selected_context.moodle_site }}</td>
+                  </tr>
+                  <tr>
+                    <th>Course ID</th>
+                    <td>{{ selected_context.course_id }}</td>
+                  </tr>
+                  <tr>
+                    <th>Course Title</th>
+                    <td>{{ selected_context.course_title|default:"(not provided)" }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            {% endif %}
+          {% else %}
+            <p class="empty">No saved courses yet. Launch this tool from Moodle once to create course contexts.</p>
+          {% endif %}
+        </div>
       {% endif %}
     </section>
-  </main>
-</body>
-</html>
+{% endblock %}

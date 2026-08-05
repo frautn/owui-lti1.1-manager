@@ -1,12 +1,23 @@
 from django.conf import settings
-from django.contrib.auth import login
+from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.http import HttpRequest, HttpResponseBadRequest, HttpResponseForbidden
 from django.shortcuts import redirect, render
 from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_http_methods
 
 from .lti import is_valid_lti_oauth_signature
+from .models import LtiCourseContext
+
+
+def _is_instructor_launch(launch_params: dict[str, str]) -> bool:
+	roles_value = launch_params.get('roles', '')
+	if not roles_value:
+		return False
+
+	roles = [role.strip().lower() for role in roles_value.split(',') if role.strip()]
+	return any('instructor' in role for role in roles)
 
 
 @csrf_exempt
@@ -29,6 +40,24 @@ def lti_launch_view(request: HttpRequest):
 
 	if not is_valid_lti_oauth_signature(request, launch_params, consumer_secret):
 		return HttpResponseForbidden('Invalid OAuth signature.')
+
+	if not _is_instructor_launch(launch_params):
+		return HttpResponseForbidden('Access denied: only instructors are allowed.')
+
+	moodle_site = (
+		launch_params.get('tool_consumer_instance_guid', '').strip()
+		or launch_params.get('tool_consumer_instance_url', '').strip()
+		or consumer_key.strip()
+	)[:255]
+	course_id = launch_params.get('context_id', '').strip()[:255]
+	course_title = launch_params.get('context_title', '').strip()[:255]
+
+	if moodle_site and course_id:
+		LtiCourseContext.objects.update_or_create(
+			moodle_site=moodle_site,
+			course_id=course_id,
+			defaults={'course_title': course_title},
+		)
 
 	lti_user_id = launch_params.get('user_id', '').strip()
 	email = launch_params.get('lis_person_contact_email_primary', '').strip()
@@ -67,11 +96,64 @@ def lti_launch_view(request: HttpRequest):
 @login_required
 def home_view(request: HttpRequest):
 	launch_data = request.session.get('lti_launch', {})
+	course_contexts = LtiCourseContext.objects.order_by('moodle_site', 'course_title', 'course_id')
+	selected_context = None
+	selected_context_id = request.GET.get('course_context', '').strip()
+
+	if launch_data:
+		moodle_site = (
+			launch_data.get('tool_consumer_instance_guid', '').strip()
+			or launch_data.get('tool_consumer_instance_url', '').strip()
+			or launch_data.get('oauth_consumer_key', '').strip()
+		)[:255]
+		course_id = launch_data.get('context_id', '').strip()[:255]
+		course_title_from_launch = launch_data.get('context_title', '').strip()[:255]
+
+		school_name = (launch_data.get('custom_school_name', '').strip()[:255] or None)
+		if moodle_site and course_id:
+			selected_context, _ = LtiCourseContext.objects.get_or_create(
+				moodle_site=moodle_site,
+				course_id=course_id,
+				defaults={'course_title': course_title_from_launch},
+			)
+			if selected_context and school_name:
+				selected_context.custom_moodle_site = school_name
+				selected_context.save(update_fields=['custom_moodle_site', 'updated_at'])
+			if (
+				selected_context
+				and course_title_from_launch
+				and selected_context.course_title != course_title_from_launch
+			):
+				selected_context.course_title = course_title_from_launch
+				selected_context.save(update_fields=['course_title', 'updated_at'])
+	elif selected_context_id.isdigit():
+		selected_context = course_contexts.filter(id=int(selected_context_id)).first()
+
+	course_title = (
+		launch_data.get('context_title')
+		or (selected_context.course_title if selected_context and selected_context.course_title else '')
+		or 'Course Manager'
+	)
+
+	site_name = (
+		selected_context.custom_moodle_site if selected_context and selected_context.custom_moodle_site else (selected_context.moodle_site if selected_context and selected_context.moodle_site else '')
+	)
 	return render(
 		request,
 		'app/home.html',
 		{
 			'launch_data': launch_data,
+			'course_contexts': course_contexts,
+			'selected_context': selected_context,
+			'selected_context_id': selected_context_id,
 			'user': request.user,
+			'site_name': site_name,
+			'course_title': course_title,
 		},
 	)
+
+
+@require_http_methods(['GET', 'POST'])
+def logout_view(request: HttpRequest):
+	logout(request)
+	return redirect('login')
