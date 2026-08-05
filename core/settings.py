@@ -119,7 +119,19 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
+# BASE_DIR should already be defined at the top of your settings.py:
+# BASE_DIR = Path(__file__).resolve().parent.parent
+
 STATIC_URL = 'static/'
+
+# Directories where Django looks for custom static files (like app/static)
+STATICFILES_DIRS = [
+    BASE_DIR / 'static',
+]
+
+# The directory where collectstatic will gather all static files for deployment
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
@@ -146,3 +158,5 @@ for pair in _lti_consumers_env.split(','):
 LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/login/'
+
+
