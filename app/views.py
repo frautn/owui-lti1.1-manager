@@ -85,5 +85,6 @@ def home_view(request: HttpRequest):
 		{
 			'launch_data': launch_data,
 			'user': request.user,
+			'course_title': launch_data.get('context_title', 'Unknown Course'),
 		},
 	)

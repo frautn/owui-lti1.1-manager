@@ -2,8 +2,8 @@
 
 {% block content %}
     <header>
-      <h1>Moodle LTI Launch</h1>
-      <p>You are signed in through an LTI 1.1 launch.</p>
+      <h1>{{ course_title }}</h1>
+      <p>{{ user.get_full_name|default:user.username }}</p>
     </header>
     <section class="content">
       <p class="meta">
