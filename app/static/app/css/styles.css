@@ -113,9 +113,8 @@ tr:last-child td {
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  border-bottom: 2px solid #e6fffa;
-  padding-bottom: 0.75rem;
-  margin-bottom: 1.25rem;
+  padding-bottom: 0.25rem;
+  margin-bottom: 0.25rem;
   width: 100%;
 }
 

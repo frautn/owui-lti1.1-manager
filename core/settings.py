@@ -124,11 +124,6 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
-# Directories where Django looks for custom static files (like app/static)
-STATICFILES_DIRS = [
-    BASE_DIR / 'static',
-]
-
 # The directory where collectstatic will gather all static files for deployment
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
