@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.db import models
 
 
@@ -24,3 +25,24 @@ class LtiCourseContext(models.Model):
 			else:
 				return f"{self.moodle_site} - {self.course_title} ({self.course_id})"
 		return f"{self.moodle_site} - {self.course_id}"
+
+
+class Question(models.Model):
+	title = models.CharField(max_length=255)
+	prompt = models.TextField(blank=True, help_text="Prompt content to send to LLMs.")
+	notes = models.TextField(blank=True)
+	author = models.ForeignKey(
+		settings.AUTH_USER_MODEL,
+		on_delete=models.PROTECT,
+		related_name='authored_prompts',
+	)
+	last_update = models.ForeignKey(
+		settings.AUTH_USER_MODEL,
+		on_delete=models.PROTECT,
+		related_name='updated_prompts',
+	)
+	created_at = models.DateTimeField(auto_now_add=True)
+	updated_at = models.DateTimeField(auto_now=True)
+
+	def __str__(self) -> str:
+		return self.title
