@@ -2,35 +2,39 @@ from django.conf import settings
 from django.db import models
 
 
-class LtiCourseContext(models.Model):
-	moodle_site = models.CharField(max_length=255)
+class Site(models.Model):
+	moodle_site = models.CharField(max_length=255, unique=True)
+	custom_moodle_site = models.CharField(max_length=255, blank=True, help_text="Optional display name for this Moodle site.")
+
+	def __str__(self) -> str:
+		return self.custom_moodle_site or self.moodle_site
+
+
+class Course(models.Model):
+	site = models.ForeignKey(Site, on_delete=models.CASCADE, related_name='courses')
 	course_id = models.CharField(max_length=255)
 	course_title = models.CharField(max_length=255, blank=True)
-	custom_moodle_site = models.CharField(max_length=255, null=True, blank=False, help_text="Optional custom Moodle site name for display purposes.")
 	created_at = models.DateTimeField(auto_now_add=True)
 	updated_at = models.DateTimeField(auto_now=True)
 
 	class Meta:
 		constraints = [
 			models.UniqueConstraint(
-				fields=['moodle_site', 'course_id'],
-				name='uniq_lti_course_context_site_course',
+				fields=['site', 'course_title'],
+				name='uniq_course_site_title',
 			)
 		]
 
 	def __str__(self) -> str:
-		if self.course_title:
-			if self.custom_moodle_site:
-				return f"{self.custom_moodle_site} - {self.course_title} ({self.course_id})"
-			else:
-				return f"{self.moodle_site} - {self.course_title} ({self.course_id})"
-		return f"{self.moodle_site} - {self.course_id}"
+		name = self.course_title or self.course_id
+		return f"{self.site} - {name}"
 
 
 class Question(models.Model):
 	title = models.CharField(max_length=255)
 	prompt = models.TextField(blank=True, help_text="Prompt content to send to LLMs.")
 	notes = models.TextField(blank=True)
+	courses = models.ManyToManyField(Course, blank=True, related_name='questions')
 	author = models.ForeignKey(
 		settings.AUTH_USER_MODEL,
 		on_delete=models.PROTECT,

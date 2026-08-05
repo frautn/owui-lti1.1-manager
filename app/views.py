@@ -8,7 +8,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 
 from .lti import is_valid_lti_oauth_signature
-from .models import LtiCourseContext, Question
+from .models import Course, Question, Site
 
 
 def _is_instructor_launch(launch_params: dict[str, str]) -> bool:
@@ -53,11 +53,15 @@ def lti_launch_view(request: HttpRequest):
 	course_title = launch_params.get('context_title', '').strip()[:255]
 
 	if moodle_site and course_id:
-		LtiCourseContext.objects.update_or_create(
-			moodle_site=moodle_site,
+		site_obj, _ = Site.objects.get_or_create(moodle_site=moodle_site)
+		course_obj, created = Course.objects.get_or_create(
+			site=site_obj,
 			course_id=course_id,
 			defaults={'course_title': course_title},
 		)
+		if not created and course_obj.course_title != course_title:
+			course_obj.course_title = course_title
+			course_obj.save(update_fields=['course_title', 'updated_at'])
 
 	lti_user_id = launch_params.get('user_id', '').strip()
 	email = launch_params.get('lis_person_contact_email_primary', '').strip()
@@ -96,7 +100,7 @@ def lti_launch_view(request: HttpRequest):
 @login_required
 def home_view(request: HttpRequest):
 	launch_data = request.session.get('lti_launch', {})
-	course_contexts = LtiCourseContext.objects.order_by('moodle_site', 'course_title', 'course_id')
+	course_contexts = Course.objects.select_related('site').order_by('site__moodle_site', 'course_title', 'course_id')
 	questions = Question.objects.select_related('author', 'last_update').order_by('title', 'id')
 	selected_context = None
 	selected_context_id = request.GET.get('course_context', '').strip()
@@ -119,14 +123,15 @@ def home_view(request: HttpRequest):
 
 		school_name = (launch_data.get('custom_school_name', '').strip()[:255] or None)
 		if moodle_site and course_id:
-			selected_context, _ = LtiCourseContext.objects.get_or_create(
-				moodle_site=moodle_site,
+			site_obj, _ = Site.objects.get_or_create(moodle_site=moodle_site)
+			if school_name and site_obj.custom_moodle_site != school_name:
+				site_obj.custom_moodle_site = school_name
+				site_obj.save(update_fields=['custom_moodle_site'])
+			selected_context, _ = Course.objects.get_or_create(
+				site=site_obj,
 				course_id=course_id,
 				defaults={'course_title': course_title_from_launch},
 			)
-			if selected_context and school_name:
-				selected_context.custom_moodle_site = school_name
-				selected_context.save(update_fields=['custom_moodle_site', 'updated_at'])
 			if (
 				selected_context
 				and course_title_from_launch
@@ -144,7 +149,7 @@ def home_view(request: HttpRequest):
 	)
 
 	site_name = (
-		selected_context.custom_moodle_site if selected_context and selected_context.custom_moodle_site else (selected_context.moodle_site if selected_context and selected_context.moodle_site else '')
+		str(selected_context.site) if selected_context else ''
 	)
 	return render(
 		request,
