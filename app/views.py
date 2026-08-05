@@ -9,6 +9,15 @@ from django.views.decorators.csrf import csrf_exempt
 from .lti import is_valid_lti_oauth_signature
 
 
+def _is_instructor_launch(launch_params: dict[str, str]) -> bool:
+	roles_value = launch_params.get('roles', '')
+	if not roles_value:
+		return False
+
+	roles = [role.strip().lower() for role in roles_value.split(',') if role.strip()]
+	return any('instructor' in role for role in roles)
+
+
 @csrf_exempt
 def lti_launch_view(request: HttpRequest):
 	if request.method != 'POST':
@@ -29,6 +38,9 @@ def lti_launch_view(request: HttpRequest):
 
 	if not is_valid_lti_oauth_signature(request, launch_params, consumer_secret):
 		return HttpResponseForbidden('Invalid OAuth signature.')
+
+	if not _is_instructor_launch(launch_params):
+		return HttpResponseForbidden('Access denied: only instructors are allowed.')
 
 	lti_user_id = launch_params.get('user_id', '').strip()
 	email = launch_params.get('lis_person_contact_email_primary', '').strip()
