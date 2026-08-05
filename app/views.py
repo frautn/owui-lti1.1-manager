@@ -96,13 +96,51 @@ def lti_launch_view(request: HttpRequest):
 @login_required
 def home_view(request: HttpRequest):
 	launch_data = request.session.get('lti_launch', {})
+	course_contexts = LtiCourseContext.objects.order_by('moodle_site', 'course_title', 'course_id')
+	selected_context = None
+	selected_context_id = request.GET.get('course_context', '').strip()
+
+	if launch_data:
+		moodle_site = (
+			launch_data.get('tool_consumer_instance_guid', '').strip()
+			or launch_data.get('tool_consumer_instance_url', '').strip()
+			or launch_data.get('oauth_consumer_key', '').strip()
+		)[:255]
+		course_id = launch_data.get('context_id', '').strip()[:255]
+		course_title_from_launch = launch_data.get('context_title', '').strip()[:255]
+
+		if moodle_site and course_id:
+			selected_context, _ = LtiCourseContext.objects.get_or_create(
+				moodle_site=moodle_site,
+				course_id=course_id,
+				defaults={'course_title': course_title_from_launch},
+			)
+			if (
+				selected_context
+				and course_title_from_launch
+				and selected_context.course_title != course_title_from_launch
+			):
+				selected_context.course_title = course_title_from_launch
+				selected_context.save(update_fields=['course_title', 'updated_at'])
+	elif selected_context_id.isdigit():
+		selected_context = course_contexts.filter(id=int(selected_context_id)).first()
+
+	course_title = (
+		launch_data.get('context_title')
+		or (selected_context.course_title if selected_context and selected_context.course_title else '')
+		or 'Course Manager'
+	)
+
 	return render(
 		request,
 		'app/home.html',
 		{
 			'launch_data': launch_data,
+			'course_contexts': course_contexts,
+			'selected_context': selected_context,
+			'selected_context_id': selected_context_id,
 			'user': request.user,
-			'course_title': launch_data.get('context_title', 'Unknown Course'),
+			'course_title': course_title,
 		},
 	)
 

@@ -14,25 +14,140 @@
         {% if user.email %}({{ user.email }}){% endif %}
       </p>
 
+      <style>
+        .panel {
+          background: #ffffff;
+          border: 1px solid #dbe7e3;
+          border-radius: 12px;
+          padding: 1rem;
+          margin-bottom: 1rem;
+        }
+
+        .panel h2 {
+          margin: 0 0 0.75rem;
+          font-size: 1.05rem;
+          color: #1e293b;
+        }
+
+        .picker {
+          display: flex;
+          gap: 0.6rem;
+          align-items: center;
+          flex-wrap: wrap;
+          margin-top: 0.6rem;
+        }
+
+        .picker select {
+          min-width: 320px;
+          max-width: 100%;
+          border: 1px solid #cbd5e1;
+          border-radius: 10px;
+          padding: 0.6rem 0.7rem;
+          font: inherit;
+        }
+
+        .picker button {
+          border: 0;
+          border-radius: 10px;
+          padding: 0.62rem 0.9rem;
+          font: inherit;
+          font-weight: 700;
+          color: #ffffff;
+          background: #0f766e;
+          cursor: pointer;
+        }
+
+        .subtle {
+          margin: 0.4rem 0 0;
+          color: #64748b;
+          font-size: 0.92rem;
+        }
+      </style>
+
       {% if launch_data %}
-        <table>
-          <thead>
-            <tr>
-              <th>Launch Field</th>
-              <th>Value</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for key, value in launch_data.items %}
+        <div class="panel">
+          <h2>Current LTI Context</h2>
+          {% if selected_context %}
+            <table>
+              <tbody>
+                <tr>
+                  <th>Moodle Site</th>
+                  <td>{{ selected_context.moodle_site }}</td>
+                </tr>
+                <tr>
+                  <th>Course ID</th>
+                  <td>{{ selected_context.course_id }}</td>
+                </tr>
+                <tr>
+                  <th>Course Title</th>
+                  <td>{{ selected_context.course_title|default:"(not provided)" }}</td>
+                </tr>
+              </tbody>
+            </table>
+          {% else %}
+            <p class="empty">Launch data exists, but Moodle site/course identifiers are missing.</p>
+          {% endif %}
+        </div>
+
+        <div class="panel">
+          <h2>Launch Payload</h2>
+          <table>
+            <thead>
               <tr>
-                <th>{{ key }}</th>
-                <td>{{ value }}</td>
+                <th>Launch Field</th>
+                <th>Value</th>
               </tr>
-            {% endfor %}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {% for key, value in launch_data.items %}
+                <tr>
+                  <th>{{ key }}</th>
+                  <td>{{ value }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
       {% else %}
-        <p class="empty">No LTI launch data found in session. This is expected after direct app login.</p>
+        <div class="panel">
+          <h2>Select a Course</h2>
+          {% if course_contexts %}
+            <p>Choose a Moodle site/course context from previous LTI launches.</p>
+            <form method="get" class="picker">
+              <select name="course_context" aria-label="Select a course context">
+                <option value="">Select a course...</option>
+                {% for ctx in course_contexts %}
+                  <option value="{{ ctx.id }}" {% if selected_context and selected_context.id == ctx.id %}selected{% endif %}>
+                    {{ ctx.moodle_site }} | {{ ctx.course_title|default:ctx.course_id }}
+                  </option>
+                {% endfor %}
+              </select>
+              <button type="submit">Load Context</button>
+            </form>
+
+            {% if selected_context %}
+              <p class="subtle">Selected context details:</p>
+              <table>
+                <tbody>
+                  <tr>
+                    <th>Moodle Site</th>
+                    <td>{{ selected_context.moodle_site }}</td>
+                  </tr>
+                  <tr>
+                    <th>Course ID</th>
+                    <td>{{ selected_context.course_id }}</td>
+                  </tr>
+                  <tr>
+                    <th>Course Title</th>
+                    <td>{{ selected_context.course_title|default:"(not provided)" }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            {% endif %}
+          {% else %}
+            <p class="empty">No saved courses yet. Launch this tool from Moodle once to create course contexts.</p>
+          {% endif %}
+        </div>
       {% endif %}
     </section>
 {% endblock %}
