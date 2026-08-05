@@ -58,51 +58,164 @@
           color: #64748b;
           font-size: 0.92rem;
         }
+
+        .question-layout {
+          display: grid;
+          grid-template-columns: minmax(260px, 340px) minmax(0, 1fr);
+          gap: 1rem;
+        }
+
+        .question-list {
+          max-height: 32rem;
+          overflow-y: auto;
+          padding-right: 0.25rem;
+        }
+
+        .question-list a {
+          display: block;
+          padding: 0.85rem 0.9rem;
+          margin-bottom: 0.6rem;
+          border: 1px solid #dbe7e3;
+          border-radius: 10px;
+          color: #0f172a;
+          text-decoration: none;
+          background: #f8fffd;
+        }
+
+        .question-list a:hover {
+          border-color: #0f766e;
+          background: #effcf8;
+        }
+
+        .question-list a.is-active {
+          border-color: #0f766e;
+          background: #e6fffa;
+          box-shadow: inset 0 0 0 1px #0f766e;
+        }
+
+        .question-list-title {
+          display: block;
+          font-weight: 700;
+          margin-bottom: 0.2rem;
+        }
+
+        .question-detail {
+          min-width: 0;
+        }
+
+        .question-detail section + section {
+          margin-top: 1rem;
+        }
+
+        .question-detail pre {
+          margin: 0;
+          padding: 0.9rem;
+          white-space: pre-wrap;
+          word-break: break-word;
+          background: #f8fafc;
+          border: 1px solid #dbe7e3;
+          border-radius: 10px;
+          font: inherit;
+        }
+
+        .meta-table th {
+          text-align: left;
+          width: 10rem;
+          color: #475569;
+        }
+
+        .meta-table th,
+        .meta-table td {
+          padding: 0.45rem 0;
+          vertical-align: top;
+        }
+
+        .empty-state {
+          border: 1px dashed #cbd5e1;
+          border-radius: 10px;
+          padding: 1rem;
+          color: #64748b;
+          background: #f8fafc;
+        }
+
+        @media (max-width: 860px) {
+          .question-layout {
+            grid-template-columns: 1fr;
+          }
+
+          .question-list {
+            max-height: 18rem;
+          }
+        }
       </style>
 
       {% if launch_data %}
-        <div class="panel">
-          <h2>Current LTI Context</h2>
-          {% if selected_context %}
-            <table>
-              <tbody>
-                <tr>
-                  <th>Moodle Site</th>
-                  <td>{{ selected_context.moodle_site }}</td>
-                </tr>
-                <tr>
-                  <th>Course ID</th>
-                  <td>{{ selected_context.course_id }}</td>
-                </tr>
-                <tr>
-                  <th>Course Title</th>
-                  <td>{{ selected_context.course_title|default:"(not provided)" }}</td>
-                </tr>
-              </tbody>
-            </table>
-          {% else %}
-            <p class="empty">Launch data exists, but Moodle site/course identifiers are missing.</p>
-          {% endif %}
-        </div>
+        <!-- <div class="panel"> -->
+          <!-- Keep this panel commented for further use. -->
+        <!-- </div> -->
 
         <div class="panel">
-          <h2>Launch Payload</h2>
-          <table>
-            <thead>
-              <tr>
-                <th>Launch Field</th>
-                <th>Value</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for key, value in launch_data.items %}
-                <tr>
-                  <th>{{ key }}</th>
-                  <td>{{ value }}</td>
-                </tr>
-              {% endfor %}
-            </tbody>
-          </table>
+          <div class="question-layout">
+            <div>
+              <h2>Questions</h2>
+              {% if questions %}
+                <div class="question-list" role="list">
+                  {% for question in questions %}
+                    <a
+                      href="?question={{ question.id }}"
+                      class="{% if selected_question and selected_question.id == question.id %}is-active{% endif %}"
+                      role="listitem"
+                    >
+                      <span class="question-list-title">{{ question.title }}</span>
+                      <span class="subtle">Updated {{ question.updated_at|date:"Y-m-d H:i" }}</span>
+                    </a>
+                  {% endfor %}
+                </div>
+              {% else %}
+                <div class="empty-state">No questions available yet.</div>
+              {% endif %}
+            </div>
+
+            <div class="question-detail">
+              <h2>&nbsp;</h2>
+              {% if selected_question %}
+                <section>
+                  <table class="meta-table">
+                    <tbody>
+                      <tr>
+                        <th>Title</th>
+                        <td>{{ selected_question.title }}</td>
+                      </tr>
+                      <tr>
+                        <th>Author</th>
+                        <td>{{ selected_question.author.get_full_name|default:selected_question.author.username }}</td>
+                      </tr>
+                      <tr>
+                        <th>Last Update</th>
+                        <td>{{ selected_question.last_update.get_full_name|default:selected_question.last_update.username }}</td>
+                      </tr>
+                      <tr>
+                        <th>Updated At</th>
+                        <td>{{ selected_question.updated_at|date:"Y-m-d H:i" }}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </section>
+
+                <section>
+                  <h2>Prompt</h2>
+                  <pre>{{ selected_question.prompt|default:"No prompt provided." }}</pre>
+                </section>
+
+                <section>
+                  <h2>Notes</h2>
+                  <pre>{{ selected_question.notes|default:"No notes provided." }}</pre>
+                </section>
+              {% else %}
+                <div class="empty-state">Select a question from the list to view its details.</div>
+              {% endif %}
+            </div>
+          </div>
         </div>
       {% else %}
         <div class="panel">

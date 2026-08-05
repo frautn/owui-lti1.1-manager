@@ -8,7 +8,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 
 from .lti import is_valid_lti_oauth_signature
-from .models import LtiCourseContext
+from .models import LtiCourseContext, Question
 
 
 def _is_instructor_launch(launch_params: dict[str, str]) -> bool:
@@ -97,8 +97,16 @@ def lti_launch_view(request: HttpRequest):
 def home_view(request: HttpRequest):
 	launch_data = request.session.get('lti_launch', {})
 	course_contexts = LtiCourseContext.objects.order_by('moodle_site', 'course_title', 'course_id')
+	questions = Question.objects.select_related('author', 'last_update').order_by('title', 'id')
 	selected_context = None
 	selected_context_id = request.GET.get('course_context', '').strip()
+	selected_question = None
+	selected_question_id = request.GET.get('question', '').strip()
+
+	if selected_question_id.isdigit():
+		selected_question = questions.filter(id=int(selected_question_id)).first()
+	if selected_question is None:
+		selected_question = questions.first()
 
 	if launch_data:
 		moodle_site = (
@@ -144,6 +152,8 @@ def home_view(request: HttpRequest):
 		{
 			'launch_data': launch_data,
 			'course_contexts': course_contexts,
+			'questions': questions,
+			'selected_question': selected_question,
 			'selected_context': selected_context,
 			'selected_context_id': selected_context_id,
 			'user': request.user,
