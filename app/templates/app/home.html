@@ -2,17 +2,13 @@
 
 {% block content %}
     <header>
-      <h1>{{ course_title }}</h1>
+      <h1>{{ site_name }} | {{ course_title }}</h1>
       <p>
         {{ user.get_full_name|default:user.username }}
         | <a href="{% url 'logout' %}" style="color: #e6fffa; font-weight: 700;">Sign out</a>
       </p>
     </header>
     <section class="content">
-      <p class="meta">
-        Signed in as <strong>{{ user.get_full_name|default:user.username }}</strong>
-        {% if user.email %}({{ user.email }}){% endif %}
-      </p>
 
       <style>
         .panel {
@@ -118,7 +114,7 @@
                 <option value="">Select a course...</option>
                 {% for ctx in course_contexts %}
                   <option value="{{ ctx.id }}" {% if selected_context and selected_context.id == ctx.id %}selected{% endif %}>
-                    {{ ctx.moodle_site }} | {{ ctx.course_title|default:ctx.course_id }}
+                    {% if ctx.custom_moodle_site %}{{ ctx.custom_moodle_site }}{% else %}{{ ctx.moodle_site }}{% endif %} | {{ ctx.course_title|default:ctx.course_id }}
                   </option>
                 {% endfor %}
               </select>

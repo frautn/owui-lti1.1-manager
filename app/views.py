@@ -109,12 +109,16 @@ def home_view(request: HttpRequest):
 		course_id = launch_data.get('context_id', '').strip()[:255]
 		course_title_from_launch = launch_data.get('context_title', '').strip()[:255]
 
+		school_name = (launch_data.get('custom_school_name', '').strip()[:255] or None)
 		if moodle_site and course_id:
 			selected_context, _ = LtiCourseContext.objects.get_or_create(
 				moodle_site=moodle_site,
 				course_id=course_id,
 				defaults={'course_title': course_title_from_launch},
 			)
+			if selected_context and school_name:
+				selected_context.custom_moodle_site = school_name
+				selected_context.save(update_fields=['custom_moodle_site', 'updated_at'])
 			if (
 				selected_context
 				and course_title_from_launch
@@ -131,6 +135,9 @@ def home_view(request: HttpRequest):
 		or 'Course Manager'
 	)
 
+	site_name = (
+		selected_context.custom_moodle_site if selected_context and selected_context.custom_moodle_site else (selected_context.moodle_site if selected_context and selected_context.moodle_site else '')
+	)
 	return render(
 		request,
 		'app/home.html',
@@ -140,6 +147,7 @@ def home_view(request: HttpRequest):
 			'selected_context': selected_context,
 			'selected_context_id': selected_context_id,
 			'user': request.user,
+			'site_name': site_name,
 			'course_title': course_title,
 		},
 	)
