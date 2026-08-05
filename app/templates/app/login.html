@@ -1,0 +1,95 @@
+{% extends 'app/base.html' %}
+
+{% block content %}
+  <header>
+    <h1>App Login</h1>
+    <p>Sign in with your local Django account.</p>
+  </header>
+  <section class="content">
+    <style>
+      .auth-wrap {
+        max-width: 420px;
+      }
+
+      .auth-wrap form {
+        display: grid;
+        gap: 0.8rem;
+      }
+
+      .auth-wrap label {
+        display: block;
+        font-weight: 700;
+        margin-bottom: 0.3rem;
+        color: #334155;
+      }
+
+      .auth-wrap input {
+        width: 100%;
+        border: 1px solid #cbd5e1;
+        border-radius: 10px;
+        padding: 0.7rem 0.75rem;
+        font: inherit;
+      }
+
+      .auth-wrap input:focus {
+        outline: 2px solid #14b8a6;
+        border-color: #14b8a6;
+      }
+
+      .auth-wrap button {
+        border: 0;
+        border-radius: 10px;
+        padding: 0.75rem 1rem;
+        font: inherit;
+        font-weight: 700;
+        color: #ffffff;
+        background: linear-gradient(140deg, #0f766e, #0d9488);
+        cursor: pointer;
+      }
+
+      .errorlist,
+      .error-msg {
+        margin: 0;
+        padding: 0.7rem 0.8rem;
+        border-radius: 10px;
+        background: #fef2f2;
+        border: 1px solid #fecaca;
+        color: #b91c1c;
+        list-style: none;
+      }
+
+      .help {
+        margin: 1rem 0 0;
+        color: #475569;
+        font-size: 0.95rem;
+      }
+    </style>
+
+    <div class="auth-wrap">
+      {% if form.non_field_errors %}
+        <p class="error-msg">Invalid username or password.</p>
+      {% endif %}
+
+      <form method="post">
+        {% csrf_token %}
+        <input type="hidden" name="next" value="{{ next }}">
+
+        <div>
+          <label for="id_username">Username</label>
+          {{ form.username }}
+          {{ form.username.errors }}
+        </div>
+
+        <div>
+          <label for="id_password">Password</label>
+          {{ form.password }}
+          {{ form.password.errors }}
+        </div>
+
+        <button type="submit">Sign In</button>
+      </form>
+
+      <p class="help">LTI users should launch from their LMS as usual.</p>
+    </div>
+  </section>
+{% endblock %}

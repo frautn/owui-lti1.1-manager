@@ -3,7 +3,10 @@
 {% block content %}
     <header>
       <h1>{{ course_title }}</h1>
-      <p>{{ user.get_full_name|default:user.username }}</p>
+      <p>
+        {{ user.get_full_name|default:user.username }}
+        | <a href="{% url 'logout' %}" style="color: #e6fffa; font-weight: 700;">Sign out</a>
+      </p>
     </header>
     <section class="content">
       <p class="meta">
@@ -29,7 +32,7 @@
           </tbody>
         </table>
       {% else %}
-        <p class="empty">No LTI launch data found in session.</p>
+        <p class="empty">No LTI launch data found in session. This is expected after direct app login.</p>
       {% endif %}
     </section>
 {% endblock %}

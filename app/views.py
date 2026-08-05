@@ -1,12 +1,14 @@
 from django.conf import settings
-from django.contrib.auth import login
+from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.http import HttpRequest, HttpResponseBadRequest, HttpResponseForbidden
 from django.shortcuts import redirect, render
 from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_http_methods
 
 from .lti import is_valid_lti_oauth_signature
+from .models import LtiCourseContext
 
 
 def _is_instructor_launch(launch_params: dict[str, str]) -> bool:
@@ -41,6 +43,21 @@ def lti_launch_view(request: HttpRequest):
 
 	if not _is_instructor_launch(launch_params):
 		return HttpResponseForbidden('Access denied: only instructors are allowed.')
+
+	moodle_site = (
+		launch_params.get('tool_consumer_instance_guid', '').strip()
+		or launch_params.get('tool_consumer_instance_url', '').strip()
+		or consumer_key.strip()
+	)[:255]
+	course_id = launch_params.get('context_id', '').strip()[:255]
+	course_title = launch_params.get('context_title', '').strip()[:255]
+
+	if moodle_site and course_id:
+		LtiCourseContext.objects.update_or_create(
+			moodle_site=moodle_site,
+			course_id=course_id,
+			defaults={'course_title': course_title},
+		)
 
 	lti_user_id = launch_params.get('user_id', '').strip()
 	email = launch_params.get('lis_person_contact_email_primary', '').strip()
@@ -88,3 +105,9 @@ def home_view(request: HttpRequest):
 			'course_title': launch_data.get('context_title', 'Unknown Course'),
 		},
 	)
+
+
+@require_http_methods(['GET', 'POST'])
+def logout_view(request: HttpRequest):
+	logout(request)
+	return redirect('login')

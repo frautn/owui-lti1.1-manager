@@ -142,3 +142,7 @@ for pair in _lti_consumers_env.split(','):
     secret = secret.strip()
     if key and secret:
         LTI_CONSUMERS[key] = secret
+
+LOGIN_URL = '/login/'
+LOGIN_REDIRECT_URL = '/'
+LOGOUT_REDIRECT_URL = '/login/'

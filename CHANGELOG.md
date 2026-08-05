@@ -5,23 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
----
 
-<!-- ## [Unreleased] -->
+## [Unreleased]
 
-<!-- ### Added -->
-<!-- - New feature coming in next release... -->
+### Added
+- Direct non-Moodle password login screen at `/login/`.
 
-<!-- --- -->
-
-<!-- ## [1.2.0] - 2026-08-04 -->
 
 <!-- ### ⚠️ Admin & LTI Integration Action Required -->
 <!-- - **Moodle Admins:** Re-synchronize LTI 1.3 keys. A new claim `https://purl.imsglobal.org/spec/lti/claim/custom` was added to consumer configurations. -->
 <!-- - Environment variable `LTI_CONSUMERS` schema has updated to JSON dictionary format. -->
 
 <!-- ### Added -->
-<!-- - Direct non-Moodle password login screen at `/accounts/login/`. -->
 <!-- - Account linking workflow for users logging in via both LTI and standard forms. -->
 
 <!-- ### Changed -->
@@ -34,7 +29,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 <!-- ### Security -->
 <!-- - Fixed unauthenticated access risk on public media uploads (`CVE-YYYY-XXXX`). -->
 
-<!-- --- -->
 
 ## [0.1.0] - 2026-08-04
 
