@@ -34,7 +34,7 @@ class Question(models.Model):
 	title = models.CharField(max_length=255)
 	prompt = models.TextField(blank=True, help_text="Prompt content to send to LLMs.")
 	notes = models.TextField(blank=True)
-	courses = models.ManyToManyField(Course, blank=True, related_name='questions')
+	course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='questions')
 	author = models.ForeignKey(
 		settings.AUTH_USER_MODEL,
 		on_delete=models.PROTECT,
@@ -47,6 +47,14 @@ class Question(models.Model):
 	)
 	created_at = models.DateTimeField(auto_now_add=True)
 	updated_at = models.DateTimeField(auto_now=True)
+
+	class Meta:
+		constraints = [
+			models.UniqueConstraint(
+				fields=['course', 'title'],
+				name='uniq_question_course_title',
+			)
+		]
 
 	def __str__(self) -> str:
 		return self.title
