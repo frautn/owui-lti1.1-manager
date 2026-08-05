@@ -15,14 +15,56 @@
           background: #ffffff;
           border: 1px solid #dbe7e3;
           border-radius: 12px;
-          padding: 1rem;
+          padding: 1.25rem;
           margin-bottom: 1rem;
         }
 
-        .panel h2 {
-          margin: 0 0 0.75rem;
-          font-size: 1.05rem;
-          color: #1e293b;
+        /* Top full-width action bar */
+        .panel-actions-top {
+          display: flex;
+          align-items: center;
+          justify-content: flex-start;
+          border-bottom: 2px solid #e6fffa;
+          padding-bottom: 0.75rem;
+          margin-bottom: 1.25rem;
+          width: 100%;
+        }
+
+        .btn-primary {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.35rem;
+          border: 0;
+          border-radius: 8px;
+          padding: 0.5rem 0.9rem;
+          font: inherit;
+          font-size: 0.88rem;
+          font-weight: 700;
+          color: #ffffff;
+          background: #0f766e;
+          cursor: pointer;
+          text-decoration: none;
+          transition: background 0.15s ease;
+        }
+
+        .btn-primary:hover {
+          background: #0d9488;
+        }
+
+        .btn-secondary {
+          border: 1px solid #cbd5e1;
+          border-radius: 8px;
+          padding: 0.45rem 0.8rem;
+          font: inherit;
+          font-size: 0.88rem;
+          font-weight: 600;
+          color: #475569;
+          background: #ffffff;
+          cursor: pointer;
+        }
+
+        .btn-secondary:hover {
+          background: #f1f5f9;
         }
 
         .picker {
@@ -61,14 +103,14 @@
 
         .question-layout {
           display: grid;
-          grid-template-columns: minmax(260px, 340px) minmax(0, 1fr);
-          gap: 1rem;
+          grid-template-columns: minmax(240px, 280px) minmax(0, 1fr);
+          gap: 1.5rem;
         }
 
         .question-list {
-          max-height: 32rem;
+          max-height: 40rem;
           overflow-y: auto;
-          padding-right: 0.25rem;
+          padding-right: 0.4rem;
         }
 
         .question-list a {
@@ -80,6 +122,7 @@
           color: #0f172a;
           text-decoration: none;
           background: #f8fffd;
+          transition: all 0.15s ease-in-out;
         }
 
         .question-list a:hover {
@@ -101,41 +144,156 @@
 
         .question-detail {
           min-width: 0;
+          display: flex;
+          flex-direction: column;
+          gap: 1.25rem;
         }
 
-        .question-detail section + section {
-          margin-top: 1rem;
+        .detail-section {
+          background: #f8fafc;
+          border: 1px solid #e2e8f0;
+          border-radius: 10px;
+          padding: 1rem;
         }
 
-        .question-detail pre {
+        .detail-section h3 {
+          margin: 0 0 0.5rem 0;
+          font-size: 0.95rem;
+          text-transform: uppercase;
+          letter-spacing: 0.04em;
+          color: #0f766e;
+        }
+
+        .media-container {
+          text-align: center;
+          background: #ffffff;
+          padding: 0.5rem;
+          border: 1px solid #e2e8f0;
+          border-radius: 8px;
+        }
+
+        .media-container img {
+          max-width: 100%;
+          height: auto;
+          border-radius: 6px;
+        }
+
+        .text-box {
           margin: 0;
-          padding: 0.9rem;
+          padding: 0.75rem;
           white-space: pre-wrap;
           word-break: break-word;
-          background: #f8fafc;
-          border: 1px solid #dbe7e3;
-          border-radius: 10px;
+          background: #ffffff;
+          border: 1px solid #e2e8f0;
+          border-radius: 8px;
           font: inherit;
+          line-height: 1.5;
         }
 
         .meta-table th {
           text-align: left;
-          width: 10rem;
+          width: 8rem;
           color: #475569;
         }
 
         .meta-table th,
         .meta-table td {
-          padding: 0.45rem 0;
+          padding: 0.4rem 0;
           vertical-align: top;
+        }
+
+        .ref-links-list {
+          margin: 0;
+          padding-left: 1.2rem;
+        }
+
+        .ref-links-list li {
+          margin-bottom: 0.3rem;
+        }
+
+        .ref-links-list a {
+          color: #0f766e;
+          font-weight: 600;
+          text-decoration: underline;
         }
 
         .empty-state {
           border: 1px dashed #cbd5e1;
           border-radius: 10px;
-          padding: 1rem;
+          padding: 1.5rem;
           color: #64748b;
           background: #f8fafc;
+          text-align: center;
+        }
+
+        /* Modal / Form Styling */
+        dialog.modal {
+          width: min(650px, 92vw);
+          border: 1px solid #cbd5e1;
+          border-radius: 14px;
+          padding: 1.5rem;
+          box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+
+        dialog::backdrop {
+          background: rgba(15, 23, 42, 0.45);
+          backdrop-filter: blur(2px);
+        }
+
+        .modal-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          margin-bottom: 1rem;
+          border-bottom: 1px solid #e2e8f0;
+          padding-bottom: 0.75rem;
+        }
+
+        .modal-header h2 {
+          margin: 0;
+          font-size: 1.2rem;
+          color: #0f766e;
+        }
+
+        .form-grid {
+          display: flex;
+          flex-direction: column;
+          gap: 1rem;
+        }
+
+        .form-group {
+          display: flex;
+          flex-direction: column;
+          gap: 0.35rem;
+        }
+
+        .form-group label {
+          font-size: 0.88rem;
+          font-weight: 700;
+          color: #334155;
+        }
+
+        .form-group input[type="text"],
+        .form-group input[type="url"],
+        .form-group textarea {
+          width: 100%;
+          padding: 0.6rem 0.75rem;
+          border: 1px solid #cbd5e1;
+          border-radius: 8px;
+          font: inherit;
+        }
+
+        .form-group input[type="file"] {
+          font-size: 0.88rem;
+        }
+
+        .modal-actions {
+          display: flex;
+          justify-content: flex-end;
+          gap: 0.6rem;
+          margin-top: 1.25rem;
+          border-top: 1px solid #e2e8f0;
+          padding-top: 1rem;
         }
 
         @media (max-width: 860px) {
@@ -150,14 +308,19 @@
       </style>
 
       {% if launch_data %}
-        <!-- <div class="panel"> -->
-          <!-- Keep this panel commented for further use. -->
-        <!-- </div> -->
-
         <div class="panel">
+          
+          <!-- Full-width top row with left-aligned "+ New" button -->
+          <div class="panel-actions-top">
+            <button type="button" class="btn-primary" onclick="document.getElementById('new-question-modal').showModal()">
+              + New
+            </button>
+          </div>
+
           <div class="question-layout">
+            
+            <!-- Left Column: Question Titles List -->
             <div>
-              <h2>Questions</h2>
               {% if questions %}
                 <div class="question-list" role="list">
                   {% for question in questions %}
@@ -176,23 +339,22 @@
               {% endif %}
             </div>
 
+            <!-- Right Column: Question Content & Elements -->
             <div class="question-detail">
-              <h2>&nbsp;</h2>
               {% if selected_question %}
-                <section>
+                
+                <!-- Overview & Metadata -->
+                <div class="detail-section">
+                  <h3>Question Information</h3>
                   <table class="meta-table">
                     <tbody>
                       <tr>
                         <th>Title</th>
-                        <td>{{ selected_question.title }}</td>
+                        <td><strong>{{ selected_question.title }}</strong></td>
                       </tr>
                       <tr>
                         <th>Author</th>
-                        <td>{{ selected_question.author.get_full_name|default:selected_question.author.username }}</td>
-                      </tr>
-                      <tr>
-                        <th>Last Update</th>
-                        <td>{{ selected_question.last_update.get_full_name|default:selected_question.last_update.username }}</td>
+                        <td>{{ selected_question.author.get_full_name|default:selected_question.author.username|default:"Unknown" }}</td>
                       </tr>
                       <tr>
                         <th>Updated At</th>
@@ -200,21 +362,78 @@
                       </tr>
                     </tbody>
                   </table>
-                </section>
+                </div>
 
-                <section>
-                  <h2>Prompt</h2>
-                  <pre>{{ selected_question.prompt|default:"No prompt provided." }}</pre>
-                </section>
+                <!-- Problem Image -->
+                {% if selected_question.image or selected_question.image_url %}
+                  <div class="detail-section">
+                    <h3>Problem Diagram / Image</h3>
+                    <div class="media-container">
+                      <img src="{{ selected_question.image.url|default:selected_question.image_url }}" alt="Problem Image">
+                    </div>
+                  </div>
+                {% endif %}
 
-                <section>
-                  <h2>Notes</h2>
-                  <pre>{{ selected_question.notes|default:"No notes provided." }}</pre>
-                </section>
+                <!-- Text of Problem -->
+                {% if selected_question.problem_text %}
+                  <div class="detail-section">
+                    <h3>Problem Text</h3>
+                    <div class="text-box">{{ selected_question.problem_text }}</div>
+                  </div>
+                {% endif %}
+
+                <!-- Instructions / Picture of Instructions -->
+                {% if selected_question.instructions_image or selected_question.instructions %}
+                  <div class="detail-section">
+                    <h3>Instructions</h3>
+                    {% if selected_question.instructions_image %}
+                      <div class="media-container" style="margin-bottom: 0.5rem;">
+                        <img src="{{ selected_question.instructions_image.url }}" alt="Instructions Image">
+                      </div>
+                    {% endif %}
+                    {% if selected_question.instructions %}
+                      <div class="text-box">{{ selected_question.instructions }}</div>
+                    {% endif %}
+                  </div>
+                {% endif %}
+
+                <!-- Prompts -->
+                {% if selected_question.prompt %}
+                  <div class="detail-section">
+                    <h3>Prompt</h3>
+                    <div class="text-box">{{ selected_question.prompt }}</div>
+                  </div>
+                {% endif %}
+
+                <!-- Notes -->
+                {% if selected_question.notes %}
+                  <div class="detail-section">
+                    <h3>Notes</h3>
+                    <div class="text-box">{{ selected_question.notes }}</div>
+                  </div>
+                {% endif %}
+
+                <!-- Links to Reference Texts -->
+                {% if selected_question.reference_links %}
+                  <div class="detail-section">
+                    <h3>Reference Texts</h3>
+                    <ul class="ref-links-list">
+                      {% if selected_question.reference_links.all %}
+                        {% for link in selected_question.reference_links.all %}
+                          <li><a href="{{ link.url }}" target="_blank" rel="noopener noreferrer">{{ link.title|default:link.url }}</a></li>
+                        {% endfor %}
+                      {% else %}
+                        <li><a href="{{ selected_question.reference_links }}" target="_blank" rel="noopener noreferrer">View Reference Text</a></li>
+                      {% endif %}
+                    </ul>
+                  </div>
+                {% endif %}
+
               {% else %}
-                <div class="empty-state">Select a question from the list to view its details.</div>
+                <div class="empty-state">Select a question from the list on the left to view its details.</div>
               {% endif %}
             </div>
+
           </div>
         </div>
       {% else %}
@@ -259,4 +478,64 @@
         </div>
       {% endif %}
     </section>
+
+    <!-- Modal Form for Creating Questions -->
+    <dialog id="new-question-modal" class="modal">
+      <div class="modal-header">
+        <h2>Create New Physics Question</h2>
+        <button type="button" class="btn-secondary" onclick="document.getElementById('new-question-modal').close()">✕</button>
+      </div>
+
+      <form method="post" enctype="multipart/form-data" action="">
+        {% csrf_token %}
+        <div class="form-grid">
+          
+          <div class="form-group">
+            <label for="id_title">Question Title *</label>
+            <input type="text" id="id_title" name="title" required placeholder="e.g., Kinematics: Two-Body Collision">
+          </div>
+
+          <div class="form-group">
+            <label for="id_problem_text">Problem Text</label>
+            <textarea id="id_problem_text" name="problem_text" rows="3" placeholder="Enter problem statement..."></textarea>
+          </div>
+
+          <div class="form-group">
+            <label for="id_image">Problem Diagram / Image</label>
+            <input type="file" id="id_image" name="image" accept="image/*">
+          </div>
+
+          <div class="form-group">
+            <label for="id_instructions">Instructions Text</label>
+            <textarea id="id_instructions" name="instructions" rows="2" placeholder="Instructions for students..."></textarea>
+          </div>
+
+          <div class="form-group">
+            <label for="id_instructions_image">Instructions Picture</label>
+            <input type="file" id="id_instructions_image" name="instructions_image" accept="image/*">
+          </div>
+
+          <div class="form-group">
+            <label for="id_prompt">Prompt</label>
+            <textarea id="id_prompt" name="prompt" rows="2" placeholder="System/evaluation prompt..."></textarea>
+          </div>
+
+          <div class="form-group">
+            <label for="id_notes">Notes</label>
+            <textarea id="id_notes" name="notes" rows="2" placeholder="Author notes..."></textarea>
+          </div>
+
+          <div class="form-group">
+            <label for="id_reference_links">Reference Text Link</label>
+            <input type="url" id="id_reference_links" name="reference_links" placeholder="https://example.com/physics-ref">
+          </div>
+
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn-secondary" onclick="document.getElementById('new-question-modal').close()">Cancel</button>
+          <button type="submit" class="btn-primary">Save Question</button>
+        </div>
+      </form>
+    </dialog>
 {% endblock %}
