@@ -185,7 +185,7 @@
     <!-- Modal Form for Creating Questions -->
     <dialog id="new-question-modal" class="modal">
       <div class="modal-header">
-        <h2>Create New Physics Question</h2>
+        <h2>Create New Question</h2>
         <button type="button" class="btn-secondary" onclick="document.getElementById('new-question-modal').close()">✕</button>
       </div>
 
@@ -197,42 +197,7 @@
             <label for="id_title">Question Title *</label>
             <input type="text" id="id_title" name="title" required placeholder="e.g., Kinematics: Two-Body Collision">
           </div>
-
-          <div class="form-group">
-            <label for="id_problem_text">Problem Text</label>
-            <textarea id="id_problem_text" name="problem_text" rows="3" placeholder="Enter problem statement..."></textarea>
-          </div>
-
-          <div class="form-group">
-            <label for="id_image">Problem Diagram / Image</label>
-            <input type="file" id="id_image" name="image" accept="image/*">
-          </div>
-
-          <div class="form-group">
-            <label for="id_instructions">Instructions Text</label>
-            <textarea id="id_instructions" name="instructions" rows="2" placeholder="Instructions for students..."></textarea>
-          </div>
-
-          <div class="form-group">
-            <label for="id_instructions_image">Instructions Picture</label>
-            <input type="file" id="id_instructions_image" name="instructions_image" accept="image/*">
-          </div>
-
-          <div class="form-group">
-            <label for="id_prompt">Prompt</label>
-            <textarea id="id_prompt" name="prompt" rows="2" placeholder="System/evaluation prompt..."></textarea>
-          </div>
-
-          <div class="form-group">
-            <label for="id_notes">Notes</label>
-            <textarea id="id_notes" name="notes" rows="2" placeholder="Author notes..."></textarea>
-          </div>
-
-          <div class="form-group">
-            <label for="id_reference_links">Reference Text Link</label>
-            <input type="url" id="id_reference_links" name="reference_links" placeholder="https://example.com/physics-ref">
-          </div>
-
+          
         </div>
 
         <div class="modal-actions">
