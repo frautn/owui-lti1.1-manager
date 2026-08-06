@@ -10,7 +10,7 @@ from django.views.decorators.http import require_http_methods
 
 from .lti import is_valid_lti_oauth_signature
 from .models import Course, Question, Site
-from .services import handle_question_creation
+from .services import handle_question_creation, handle_question_update
 
 
 def _is_instructor_launch(launch_params: dict[str, str]) -> bool:
@@ -204,3 +204,40 @@ def question_detail_partial_view(request: HttpRequest, question_id: int):
         request=request,
     )
     return JsonResponse({'html': html, 'question_id': selected_question.id})
+
+
+
+@login_required
+@require_http_methods(['GET', 'POST'])
+def question_detail_partial_view(request: HttpRequest, question_id: int):
+    selected_question = Question.objects.select_related('author', 'last_update', 'course').filter(id=question_id).first()
+    if selected_question is None:
+        return JsonResponse({'error': 'Question not found.'}, status=404)
+
+    is_editing = request.GET.get('edit') == 'true'
+    edit_error = None
+
+    if request.method == 'POST':
+        updated_question, edit_error = handle_question_update(request, selected_question)
+        if not edit_error:
+            # Turn off edit mode after successful save
+            is_editing = False
+        else:
+            is_editing = True
+
+    html = render_to_string(
+        'app/partials/question_detail.html',
+        {
+            'selected_question': selected_question,
+            'is_editing': is_editing,
+            'edit_error': edit_error,
+        },
+        request=request,
+    )
+    return JsonResponse({
+        'html': html,
+        'question_id': selected_question.id,
+        'title': selected_question.title,
+        'is_editing': is_editing,
+        'error': edit_error,
+    })
