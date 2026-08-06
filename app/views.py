@@ -10,7 +10,7 @@ from django.views.decorators.http import require_http_methods
 
 from .lti import is_valid_lti_oauth_signature
 from .models import Course, Question, Site
-from .services import handle_question_creation, handle_question_update
+from .services import handle_question_creation, handle_question_update, handle_question_deletion
 
 
 def _is_instructor_launch(launch_params: dict[str, str]) -> bool:
@@ -241,3 +241,17 @@ def question_detail_partial_view(request: HttpRequest, question_id: int):
         'is_editing': is_editing,
         'error': edit_error,
     })
+
+
+@login_required
+@require_http_methods(['POST'])
+def question_delete_view(request: HttpRequest, question_id: int):
+    question = Question.objects.filter(id=question_id).first()
+    if not question:
+        return JsonResponse({'success': False, 'error': 'Question not found.'}, status=404)
+
+    success, error = handle_question_deletion(request, question)
+    if not success:
+        return JsonResponse({'success': False, 'error': error}, status=400)
+
+    return JsonResponse({'success': True, 'deleted_id': question_id})

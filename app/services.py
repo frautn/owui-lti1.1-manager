@@ -109,3 +109,26 @@ def handle_question_update(request, question: Question) -> Tuple[Optional[Questi
         notes=notes,
     )
     return updated_question, None
+
+# Append to services.py
+
+def delete_question(*, question: Question) -> None:
+    """
+    Deletes a Question object from the database.
+    """
+    question.delete()
+
+
+def handle_question_deletion(request, question: Question) -> Tuple[bool, Optional[str]]:
+    """
+    Handles question deletion.
+    Returns a tuple: (success_boolean, error_message_or_none).
+    """
+    if not question:
+        return False, "Question does not exist."
+
+    try:
+        delete_question(question=question)
+        return True, None
+    except Exception as e:
+        return False, f"Could not delete question: {str(e)}"

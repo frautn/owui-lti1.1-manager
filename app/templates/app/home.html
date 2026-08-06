@@ -269,6 +269,51 @@
               loadQuestion(activeLink.dataset.questionId, activeLink.href, false);
             }
           }
+          // Handle Delete button click
+          if (event.target.closest('#btn-delete-question')) {
+            const activeLink = document.querySelector('.question-list a.is-active');
+            if (!activeLink) return;
+
+            const questionId = activeLink.dataset.questionId;
+            const questionTitle = activeLink.querySelector('.question-list-title')?.textContent || 'this question';
+
+            if (!confirm(`Are you sure you want to delete "${questionTitle}"? This action cannot be undone.`)) {
+              return;
+            }
+
+            // Retrieve CSRF token from page
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+
+            try {
+              const response = await fetch(`/questions/${questionId}/delete/`, {
+                method: 'POST',
+                headers: {
+                  'X-Requested-With': 'XMLHttpRequest',
+                  'X-CSRFToken': csrfToken,
+                },
+              });
+
+              const data = await response.json();
+
+              if (data.success) {
+                // Remove deleted item from sidebar list
+                activeLink.remove();
+
+                // Load remaining first question or reload page
+                const nextLink = document.querySelector('.question-list a[data-question-id]');
+                if (nextLink) {
+                  loadQuestion(nextLink.dataset.questionId, nextLink.href);
+                } else {
+                  window.location.reload();
+                }
+              } else {
+                alert(data.error || 'Failed to delete question.');
+              }
+            } catch (err) {
+              console.error('Failed to delete question', err);
+              alert('An unexpected error occurred while deleting.');
+            }
+          }
         });
 
         // Intercept form submission for Save in edit mode
