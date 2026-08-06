@@ -99,10 +99,6 @@ def lti_launch_view(request: HttpRequest):
 	return redirect('home')
 
 
-from django.shortcuts import redirect, render
-from .services import handle_question_creation
-
-
 @login_required
 def home_view(request: HttpRequest):
     launch_data = request.session.get('lti_launch', {})
@@ -159,6 +155,15 @@ def home_view(request: HttpRequest):
     if selected_question is None:
         selected_question = questions.first()
 
+    if selected_question is not None:
+        selected_question = (
+            Question.objects
+            .select_related('author', 'last_update', 'course')
+            .prefetch_related('body', 'files')
+            .filter(id=selected_question.id)
+            .first()
+        )
+
     course_title = (
         launch_data.get('context_title')
         or (selected_context.course_title if selected_context and selected_context.course_title else '')
@@ -192,25 +197,15 @@ def logout_view(request: HttpRequest):
 
 
 @login_required
-@require_http_methods(['GET'])
-def question_detail_partial_view(request: HttpRequest, question_id: int):
-    selected_question = Question.objects.select_related('author', 'last_update').filter(id=question_id).first()
-    if selected_question is None:
-        return JsonResponse({'error': 'Question not found.'}, status=404)
-
-    html = render_to_string(
-        'app/partials/question_detail.html',
-        {'selected_question': selected_question},
-        request=request,
-    )
-    return JsonResponse({'html': html, 'question_id': selected_question.id})
-
-
-
-@login_required
 @require_http_methods(['GET', 'POST'])
 def question_detail_partial_view(request: HttpRequest, question_id: int):
-    selected_question = Question.objects.select_related('author', 'last_update', 'course').filter(id=question_id).first()
+    selected_question = (
+        Question.objects
+        .select_related('author', 'last_update', 'course')
+        .prefetch_related('body', 'files')
+        .filter(id=question_id)
+        .first()
+    )
     if selected_question is None:
         return JsonResponse({'error': 'Question not found.'}, status=404)
 
@@ -222,13 +217,24 @@ def question_detail_partial_view(request: HttpRequest, question_id: int):
         if not edit_error:
             # Turn off edit mode after successful save
             is_editing = False
+            # Re-fetch to refresh prefetched related objects (body/files) after mutations.
+            selected_question = (
+                Question.objects
+                .select_related('author', 'last_update', 'course')
+                .prefetch_related('body', 'files')
+                .filter(id=updated_question.id)
+                .first()
+            )
         else:
             is_editing = True
+
+    categories = Question.objects.filter(course=selected_question.course).values_list('category', flat=True).distinct().order_by('category')
 
     html = render_to_string(
         'app/partials/question_detail.html',
         {
             'selected_question': selected_question,
+            'categories': categories,
             'is_editing': is_editing,
             'edit_error': edit_error,
         },

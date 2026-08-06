@@ -1,3 +1,5 @@
+import os
+
 from django.conf import settings
 from django.db import models
 
@@ -97,6 +99,10 @@ class QuestionFile(models.Model):
     question = models.ForeignKey(Question, on_delete=models.CASCADE, related_name='files')
     file = models.FileField(upload_to='question_files/')
     uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    @property
+    def filename(self) -> str:
+        return os.path.basename(self.file.name)
 
     def __str__(self):
         return f"File for: {self.question.title}"
