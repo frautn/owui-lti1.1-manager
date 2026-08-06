@@ -2,13 +2,15 @@ from django.conf import settings
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
-from django.http import HttpRequest, HttpResponseBadRequest, HttpResponseForbidden
+from django.http import HttpRequest, HttpResponseBadRequest, HttpResponseForbidden, JsonResponse
 from django.shortcuts import redirect, render
+from django.template.loader import render_to_string
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 
 from .lti import is_valid_lti_oauth_signature
 from .models import Course, Question, Site
+from .services import handle_question_creation
 
 
 def _is_instructor_launch(launch_params: dict[str, str]) -> bool:
@@ -97,78 +99,108 @@ def lti_launch_view(request: HttpRequest):
 	return redirect('home')
 
 
+from django.shortcuts import redirect, render
+from .services import handle_question_creation
+
+
 @login_required
 def home_view(request: HttpRequest):
-	launch_data = request.session.get('lti_launch', {})
-	course_contexts = Course.objects.select_related('site').order_by('site__moodle_site', 'course_title', 'course_id')
-	questions = Question.objects.select_related('author', 'last_update').order_by('title', 'id')
-	selected_context = None
-	selected_context_id = request.GET.get('course_context', '').strip()
-	selected_question = None
-	selected_question_id = request.GET.get('question', '').strip()
+    launch_data = request.session.get('lti_launch', {})
+    course_contexts = Course.objects.select_related('site').order_by('site__moodle_site', 'course_title', 'course_id')
+    questions = Question.objects.select_related('author', 'last_update').order_by('title', 'id')
+    selected_context = None
+    selected_context_id = request.GET.get('course_context', '').strip()
+    modal_error = None
 
-	if selected_question_id.isdigit():
-		selected_question = questions.filter(id=int(selected_question_id)).first()
-	if selected_question is None:
-		selected_question = questions.first()
+    if launch_data:
+        moodle_site = (
+            launch_data.get('tool_consumer_instance_guid', '').strip()
+            or launch_data.get('tool_consumer_instance_url', '').strip()
+            or launch_data.get('oauth_consumer_key', '').strip()
+        )[:255]
+        course_id = launch_data.get('context_id', '').strip()[:255]
+        course_title_from_launch = launch_data.get('context_title', '').strip()[:255]
 
-	if launch_data:
-		moodle_site = (
-			launch_data.get('tool_consumer_instance_guid', '').strip()
-			or launch_data.get('tool_consumer_instance_url', '').strip()
-			or launch_data.get('oauth_consumer_key', '').strip()
-		)[:255]
-		course_id = launch_data.get('context_id', '').strip()[:255]
-		course_title_from_launch = launch_data.get('context_title', '').strip()[:255]
+        school_name = (launch_data.get('custom_school_name', '').strip()[:255] or None)
+        if moodle_site and course_id:
+            site_obj, _ = Site.objects.get_or_create(moodle_site=moodle_site)
+            if school_name and site_obj.custom_moodle_site != school_name:
+                site_obj.custom_moodle_site = school_name
+                site_obj.save(update_fields=['custom_moodle_site'])
+            selected_context, _ = Course.objects.get_or_create(
+                site=site_obj,
+                course_id=course_id,
+                defaults={'course_title': course_title_from_launch},
+            )
+            if (
+                selected_context
+                and course_title_from_launch
+                and selected_context.course_title != course_title_from_launch
+            ):
+                selected_context.course_title = course_title_from_launch
+                selected_context.save(update_fields=['course_title', 'updated_at'])
+    elif selected_context_id.isdigit():
+        selected_context = course_contexts.filter(id=int(selected_context_id)).first()
 
-		school_name = (launch_data.get('custom_school_name', '').strip()[:255] or None)
-		if moodle_site and course_id:
-			site_obj, _ = Site.objects.get_or_create(moodle_site=moodle_site)
-			if school_name and site_obj.custom_moodle_site != school_name:
-				site_obj.custom_moodle_site = school_name
-				site_obj.save(update_fields=['custom_moodle_site'])
-			selected_context, _ = Course.objects.get_or_create(
-				site=site_obj,
-				course_id=course_id,
-				defaults={'course_title': course_title_from_launch},
-			)
-			if (
-				selected_context
-				and course_title_from_launch
-				and selected_context.course_title != course_title_from_launch
-			):
-				selected_context.course_title = course_title_from_launch
-				selected_context.save(update_fields=['course_title', 'updated_at'])
-	elif selected_context_id.isdigit():
-		selected_context = course_contexts.filter(id=int(selected_context_id)).first()
+    # Process question submission POST request
+    if request.method == 'POST':
+        new_question, modal_error = handle_question_creation(request, selected_context)
+        if new_question:
+            redirect_url = f"{request.path}?question={new_question.id}"
+            if selected_context and not launch_data:
+                redirect_url += f"&course_context={selected_context.id}"
+            return redirect(redirect_url)
 
-	course_title = (
-		launch_data.get('context_title')
-		or (selected_context.course_title if selected_context and selected_context.course_title else '')
-		or 'Course Manager'
-	)
+    selected_question = None
+    selected_question_id = request.GET.get('question', '').strip()
 
-	site_name = (
-		str(selected_context.site) if selected_context else ''
-	)
-	return render(
-		request,
-		'app/home.html',
-		{
-			'launch_data': launch_data,
-			'course_contexts': course_contexts,
-			'questions': questions,
-			'selected_question': selected_question,
-			'selected_context': selected_context,
-			'selected_context_id': selected_context_id,
-			'user': request.user,
-			'site_name': site_name,
-			'course_title': course_title,
-		},
-	)
+    if selected_question_id.isdigit():
+        selected_question = questions.filter(id=int(selected_question_id)).first()
+    if selected_question is None:
+        selected_question = questions.first()
+
+    course_title = (
+        launch_data.get('context_title')
+        or (selected_context.course_title if selected_context and selected_context.course_title else '')
+        or 'Course Manager'
+    )
+
+    site_name = str(selected_context.site) if selected_context else ''
+
+    return render(
+        request,
+        'app/home.html',
+        {
+            'launch_data': launch_data,
+            'course_contexts': course_contexts,
+            'questions': questions,
+            'selected_question': selected_question,
+            'selected_context': selected_context,
+            'selected_context_id': selected_context_id,
+            'user': request.user,
+            'site_name': site_name,
+            'course_title': course_title,
+            'modal_error': modal_error,
+        },
+    )
 
 
 @require_http_methods(['GET', 'POST'])
 def logout_view(request: HttpRequest):
 	logout(request)
 	return redirect('login')
+
+
+@login_required
+@require_http_methods(['GET'])
+def question_detail_partial_view(request: HttpRequest, question_id: int):
+    selected_question = Question.objects.select_related('author', 'last_update').filter(id=question_id).first()
+    if selected_question is None:
+        return JsonResponse({'error': 'Question not found.'}, status=404)
+
+    html = render_to_string(
+        'app/partials/question_detail.html',
+        {'selected_question': selected_question},
+        request=request,
+    )
+    return JsonResponse({'html': html, 'question_id': selected_question.id})

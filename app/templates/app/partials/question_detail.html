@@ -1,0 +1,91 @@
+{% if selected_question %}
+
+  <!-- Overview & Metadata -->
+  <div class="detail-section">
+    <h3>Question Information</h3>
+    <table class="meta-table">
+      <tbody>
+        <tr>
+          <th>Title</th>
+          <td><strong>{{ selected_question.title }}</strong></td>
+        </tr>
+        <tr>
+          <th>Author</th>
+          <td>{{ selected_question.author.get_full_name|default:selected_question.author.username|default:"Unknown" }}</td>
+        </tr>
+        <tr>
+          <th>Updated At</th>
+          <td>{{ selected_question.updated_at|date:"Y-m-d H:i" }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Problem Image -->
+  {% if selected_question.image or selected_question.image_url %}
+    <div class="detail-section">
+      <h3>Problem Diagram / Image</h3>
+      <div class="media-container">
+        <img src="{{ selected_question.image.url|default:selected_question.image_url }}" alt="Problem Image">
+      </div>
+    </div>
+  {% endif %}
+
+  <!-- Text of Problem -->
+  {% if selected_question.problem_text %}
+    <div class="detail-section">
+      <h3>Problem Text</h3>
+      <div class="text-box">{{ selected_question.problem_text }}</div>
+    </div>
+  {% endif %}
+
+  <!-- Instructions / Picture of Instructions -->
+  {% if selected_question.instructions_image or selected_question.instructions %}
+    <div class="detail-section">
+      <h3>Instructions</h3>
+      {% if selected_question.instructions_image %}
+        <div class="media-container" style="margin-bottom: 0.5rem;">
+          <img src="{{ selected_question.instructions_image.url }}" alt="Instructions Image">
+        </div>
+      {% endif %}
+      {% if selected_question.instructions %}
+        <div class="text-box">{{ selected_question.instructions }}</div>
+      {% endif %}
+    </div>
+  {% endif %}
+
+  <!-- Prompts -->
+  {% if selected_question.prompt %}
+    <div class="detail-section">
+      <h3>Prompt</h3>
+      <div class="text-box">{{ selected_question.prompt }}</div>
+    </div>
+  {% endif %}
+
+  <!-- Notes -->
+  {% if selected_question.notes %}
+    <div class="detail-section">
+      <h3>Notes</h3>
+      <div class="text-box">{{ selected_question.notes }}</div>
+    </div>
+  {% endif %}
+
+  <!-- Links to Reference Texts -->
+  {% if selected_question.reference_links %}
+    <div class="detail-section">
+      <h3>Reference Texts</h3>
+      <ul class="ref-links-list">
+        {% if selected_question.reference_links.all %}
+          {% for link in selected_question.reference_links.all %}
+            <li><a href="{{ link.url }}" target="_blank" rel="noopener noreferrer">{{ link.title|default:link.url }}</a></li>
+          {% endfor %}
+        {% else %}
+          <li><a href="{{ selected_question.reference_links }}" target="_blank" rel="noopener noreferrer">View Reference Text</a></li>
+        {% endif %}
+      </ul>
+    </div>
+  {% endif %}
+
+{% else %}
+  <div class="empty-state">Select a question from the list on the left to view its details.</div>
+{% endif %}
