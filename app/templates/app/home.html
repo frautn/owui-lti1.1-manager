@@ -13,11 +13,21 @@
       {% if launch_data %}
         <div class="panel">
           
-          <!-- Full-width top row with left-aligned "+ New" button -->
-          <div class="panel-actions-top">
-            <button type="button" class="btn-primary" onclick="document.getElementById('new-question-modal').showModal()">
-              + New
-            </button>
+          <!-- Full-width top row: "+ New" on the left, question actions on the right -->
+          <div class="panel-actions-top" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <div>
+              <button type="button" class="btn-primary" onclick="document.getElementById('new-question-modal').showModal()">
+                + New
+              </button>
+            </div>
+
+            <div class="question-actions" style="display: flex; gap: 0.5rem;">
+              {% if selected_question %}
+                <button type="button" class="btn-secondary" id="btn-export-question">Export</button>
+                <button type="button" class="btn-secondary" id="btn-edit-question">Edit</button>
+                <button type="button" class="btn-secondary" id="btn-delete-question" style="color: #b91c1c; border-color: #fecaca; background: #fef2f2;">Delete</button>
+              {% endif %}
+            </div>
           </div>
 
           <div class="question-layout">
