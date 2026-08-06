@@ -1,3 +1,6 @@
+
+other/
+
 # Python bytecode
 __pycache__/
 *.py[cod]
