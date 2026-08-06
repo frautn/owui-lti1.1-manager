@@ -124,10 +124,6 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
-# Static directories for files not tied to a single app
-STATICFILES_DIRS = [
-    BASE_DIR / 'static',
-]
 
 # The directory where collectstatic will gather all static files for deployment
 STATIC_ROOT = BASE_DIR / 'staticfiles'

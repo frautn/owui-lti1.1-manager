@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Direct non-Moodle password login screen at `/login/`.
 - List of Questions.
-- Edit question information.
+- Edit/Remove questions.
 
 
 <!-- ### ⚠️ Admin & LTI Integration Action Required -->
