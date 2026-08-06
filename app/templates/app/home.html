@@ -157,6 +157,80 @@
 
         const buildPartialUrl = (questionId) => partialUrlBase.replace('/0/partial/', `/${questionId}/partial/`);
 
+        const bytesToLabel = (bytes) => {
+          if (!Number.isFinite(bytes) || bytes <= 0) return '';
+          const units = ['B', 'KB', 'MB', 'GB'];
+          let size = bytes;
+          let unitIndex = 0;
+          while (size >= 1024 && unitIndex < units.length - 1) {
+            size /= 1024;
+            unitIndex += 1;
+          }
+          return `${size.toFixed(size >= 10 || unitIndex === 0 ? 0 : 1)} ${units[unitIndex]}`;
+        };
+
+        const renderSelectedUploadList = (inputId, listId) => {
+          const input = detailContainer.querySelector(`#${inputId}`);
+          const list = detailContainer.querySelector(`#${listId}`);
+          if (!input || !list) return;
+
+          const selectedFiles = Array.from(input.files || []);
+          if (!selectedFiles.length) {
+            list.innerHTML = '';
+            list.style.display = 'none';
+            return;
+          }
+
+          list.innerHTML = selectedFiles
+            .map((file, index) => {
+              const sizeLabel = bytesToLabel(file.size);
+              return `
+                <li style="display: flex; align-items: center; justify-content: space-between; gap: 0.6rem; border: 1px solid #cbd5e1; border-radius: 6px; background: #f8fafc; padding: 0.35rem 0.55rem;">
+                  <span style="overflow-wrap: anywhere;">${file.name}${sizeLabel ? ` (${sizeLabel})` : ''}</span>
+                  <button type="button" data-input-id="${inputId}" data-list-id="${listId}" data-remove-upload-index="${index}" class="btn-secondary" style="padding: 0.25rem 0.55rem; font-size: 0.85rem;">Remove</button>
+                </li>
+              `;
+            })
+            .join('');
+          list.style.display = 'flex';
+        };
+
+        const removeSelectedUpload = (inputId, listId, removeIndex) => {
+          const input = detailContainer.querySelector(`#${inputId}`);
+          if (!input) return;
+
+          const originalFiles = Array.from(input.files || []);
+          if (!originalFiles.length) return;
+
+          const dataTransfer = new DataTransfer();
+          originalFiles.forEach((file, index) => {
+            if (index !== removeIndex) {
+              dataTransfer.items.add(file);
+            }
+          });
+
+          input.files = dataTransfer.files;
+          input._selectedFiles = Array.from(dataTransfer.files);
+          renderSelectedUploadList(inputId, listId);
+        };
+
+        const appendSelectedUploads = (inputId, listId) => {
+          const input = detailContainer.querySelector(`#${inputId}`);
+          if (!input) return;
+
+          const pendingNewFiles = Array.from(input.files || []);
+          const existingFiles = input._selectedFiles || [];
+          const dataTransfer = new DataTransfer();
+
+          [...existingFiles, ...pendingNewFiles].forEach((file) => {
+            dataTransfer.items.add(file);
+          });
+
+          input.files = dataTransfer.files;
+          input._selectedFiles = Array.from(dataTransfer.files);
+          renderSelectedUploadList(inputId, listId);
+        };
+
         const setActiveQuestion = (questionId) => {
           const links = questionList.querySelectorAll('a[data-question-id]');
           links.forEach((link) => {
@@ -243,6 +317,17 @@
         // EDIT FUNCTIONALITY HERE:
         // ==========================================
         document.addEventListener('click', async (event) => {
+          const removeUploadBtn = event.target.closest('[data-remove-upload-index]');
+          if (removeUploadBtn) {
+            const inputId = removeUploadBtn.dataset.inputId;
+            const listId = removeUploadBtn.dataset.listId;
+            const removeIndex = Number(removeUploadBtn.dataset.removeUploadIndex);
+            if (inputId && listId && Number.isInteger(removeIndex)) {
+              removeSelectedUpload(inputId, listId, removeIndex);
+            }
+            return;
+          }
+
           // Handle Edit button click
           if (event.target.closest('#btn-edit-question')) {
             const activeLink = document.querySelector('.question-list a.is-active');
@@ -313,6 +398,15 @@
               console.error('Failed to delete question', err);
               alert('An unexpected error occurred while deleting.');
             }
+          }
+        });
+
+        detailContainer.addEventListener('change', (event) => {
+          if (event.target.matches('#edit_body_pictures')) {
+            appendSelectedUploads('edit_body_pictures', 'edit_body_pictures_selected');
+          }
+          if (event.target.matches('#edit_attachments')) {
+            appendSelectedUploads('edit_attachments', 'edit_attachments_selected');
           }
         });
 

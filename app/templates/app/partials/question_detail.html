@@ -8,7 +8,7 @@
 
   {% if is_editing %}
     <!-- Edit Mode Form -->
-    <form id="edit-question-form" method="post" action="{% url 'question-detail-partial' selected_question.id %}">
+    <form id="edit-question-form" method="post" action="{% url 'question-detail-partial' selected_question.id %}" enctype="multipart/form-data">
       {% csrf_token %}
       
       <div class="detail-section">
@@ -24,6 +24,46 @@
               required
               style="width: 100%; padding: 0.5rem; border-radius: 6px; border: 1px solid #cbd5e1;"
             >
+          </div>
+
+          <div>
+            <label for="edit_category" style="display: block; font-weight: 700; margin-bottom: 0.3rem;">Category *</label>
+            <input
+              type="text"
+              id="edit_category"
+              name="category"
+              value="{{ selected_question.category }}"
+              required
+              style="width: 100%; padding: 0.5rem; border-radius: 6px; border: 1px solid #cbd5e1;"
+            >
+          </div>
+
+          <!-- Body Pictures Section -->
+          <div>
+            <label style="display: block; font-weight: 700; margin-bottom: 0.3rem;">Body Pictures *</label>
+            {% if selected_question.body.all %}
+              <div style="display: flex; gap: 0.8rem; flex-wrap: wrap; margin-bottom: 0.8rem;">
+                {% for pic in selected_question.body.all %}
+                  <div style="display: flex; flex-direction: column; align-items: center; gap: 0.4rem; padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 6px; background: #f8fafc; min-width: 90px;">
+                    <img src="{{ pic.image.url }}" alt="Picture {{ pic.order }}" style="max-height: 80px; max-width: 120px; object-fit: cover; border-radius: 4px;">
+                    <label style="font-size: 0.85rem; color: #b91c1c; cursor: pointer; display: flex; align-items: center; gap: 0.25rem;">
+                      <input type="checkbox" name="delete_picture_ids" value="{{ pic.id }}">
+                      Remove
+                    </label>
+                  </div>
+                {% endfor %}
+              </div>
+            {% endif %}
+            <input
+              type="file"
+              id="edit_body_pictures"
+              name="body_pictures"
+              accept="image/*"
+              multiple
+              style="width: 100%; padding: 0.5rem; border-radius: 6px; border: 1px solid #cbd5e1;"
+            >
+            <ul id="edit_body_pictures_selected" style="display: none; margin: 0.6rem 0 0 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 0.35rem;"></ul>
+            <small class="subtle">Upload new pictures for the question body. Check "Remove" on existing images to delete them upon saving.</small>
           </div>
 
           <div>
@@ -45,6 +85,33 @@
               style="width: 100%; padding: 0.5rem; border-radius: 6px; border: 1px solid #cbd5e1;"
             >{{ selected_question.notes }}</textarea>
           </div>
+
+          <!-- Attachments (Files) Section -->
+          <div>
+            <label style="display: block; font-weight: 700; margin-bottom: 0.3rem;">Attachments (Files)</label>
+            {% if selected_question.files.all %}
+              <ul style="margin: 0 0 0.8rem 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 0.4rem;">
+                {% for file_item in selected_question.files.all %}
+                  <li style="display: flex; align-items: center; justify-content: space-between; padding: 0.4rem 0.6rem; border: 1px solid #cbd5e1; border-radius: 6px; background: #f8fafc;">
+                    <a href="{{ file_item.file.url }}" target="_blank" style="word-break: break-all;">{{ file_item.file.name }}</a>
+                    <label style="font-size: 0.85rem; color: #b91c1c; cursor: pointer; display: flex; align-items: center; gap: 0.25rem; white-space: nowrap; margin-left: 0.5rem;">
+                      <input type="checkbox" name="delete_file_ids" value="{{ file_item.id }}">
+                      Remove
+                    </label>
+                  </li>
+                {% endfor %}
+              </ul>
+            {% endif %}
+            <input
+              type="file"
+              id="edit_attachments"
+              name="attachments"
+              multiple
+              style="width: 100%; padding: 0.5rem; border-radius: 6px; border: 1px solid #cbd5e1;"
+            >
+            <ul id="edit_attachments_selected" style="display: none; margin: 0.6rem 0 0 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 0.35rem;"></ul>
+            <small class="subtle">Upload new file attachments. Check "Remove" on existing files to delete them upon saving.</small>
+          </div>
         </div>
       </div>
 
@@ -65,6 +132,10 @@
             <td><strong>{{ selected_question.title }}</strong></td>
           </tr>
           <tr>
+            <th>Category</th>
+            <td>{{ selected_question.category }}</td>
+          </tr>
+          <tr>
             <th>Author</th>
             <td>{{ selected_question.author.get_full_name|default:selected_question.author.username|default:"Unknown" }}</td>
           </tr>
@@ -76,7 +147,21 @@
       </table>
     </div>
 
-    <!-- Prompts -->
+    <!-- Body Pictures -->
+    {% if selected_question.body.all %}
+      <div class="detail-section">
+        <h3>Body Pictures</h3>
+        <div style="display: flex; flex-direction: column; gap: 1rem;">
+          {% for pic in selected_question.body.all %}
+            <div>
+              <img src="{{ pic.image.url }}" alt="Picture {{ pic.order }}" style="max-width: 100%; height: auto; border-radius: 8px; border: 1px solid #e2e8f0;">
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    {% endif %}
+
+    <!-- Prompt -->
     {% if selected_question.prompt %}
       <div class="detail-section">
         <h3>Prompt</h3>
@@ -89,6 +174,22 @@
       <div class="detail-section">
         <h3>Notes</h3>
         <div class="text-box">{{ selected_question.notes }}</div>
+      </div>
+    {% endif %}
+
+    <!-- Attached Files -->
+    {% if selected_question.files.all %}
+      <div class="detail-section">
+        <h3>Attached Files</h3>
+        <ul style="margin: 0; padding-left: 1.2rem;">
+          {% for file_item in selected_question.files.all %}
+            <li>
+              <a href="{{ file_item.file.url }}" target="_blank" download>
+                {{ file_item.file.name }}
+              </a>
+            </li>
+          {% endfor %}
+        </ul>
       </div>
     {% endif %}
 
