@@ -32,10 +32,17 @@
               type="text"
               id="edit_category"
               name="category"
+              list="categories_list"
               value="{{ selected_question.category }}"
               required
+              placeholder="Select or type a new category..."
               style="width: 100%; padding: 0.5rem; border-radius: 6px; border: 1px solid #cbd5e1;"
             >
+            <datalist id="categories_list">
+              {% for cat in categories %}
+                <option value="{{ cat }}">
+              {% endfor %}
+            </datalist>
           </div>
 
           <!-- Body Pictures Section -->
@@ -93,7 +100,7 @@
               <ul style="margin: 0 0 0.8rem 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 0.4rem;">
                 {% for file_item in selected_question.files.all %}
                   <li style="display: flex; align-items: center; justify-content: space-between; padding: 0.4rem 0.6rem; border: 1px solid #cbd5e1; border-radius: 6px; background: #f8fafc;">
-                    <a href="{{ file_item.file.url }}" target="_blank" style="word-break: break-all;">{{ file_item.file.name }}</a>
+                    <a href="{{ file_item.file.url }}" target="_blank" rel="noopener noreferrer" style="word-break: break-all;">{{ file_item.filename }}</a>
                     <label style="font-size: 0.85rem; color: #b91c1c; cursor: pointer; display: flex; align-items: center; gap: 0.25rem; white-space: nowrap; margin-left: 0.5rem;">
                       <input type="checkbox" name="delete_file_ids" value="{{ file_item.id }}">
                       Remove
@@ -184,8 +191,8 @@
         <ul style="margin: 0; padding-left: 1.2rem;">
           {% for file_item in selected_question.files.all %}
             <li>
-              <a href="{{ file_item.file.url }}" target="_blank" download>
-                {{ file_item.file.name }}
+              <a href="{{ file_item.file.url }}" target="_blank" rel="noopener noreferrer">
+                {{ file_item.filename }}
               </a>
             </li>
           {% endfor %}

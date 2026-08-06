@@ -99,10 +99,6 @@ def lti_launch_view(request: HttpRequest):
 	return redirect('home')
 
 
-from django.shortcuts import redirect, render
-from .services import handle_question_creation
-
-
 @login_required
 def home_view(request: HttpRequest):
     launch_data = request.session.get('lti_launch', {})
@@ -159,6 +155,15 @@ def home_view(request: HttpRequest):
     if selected_question is None:
         selected_question = questions.first()
 
+    if selected_question is not None:
+        selected_question = (
+            Question.objects
+            .select_related('author', 'last_update', 'course')
+            .prefetch_related('body', 'files')
+            .filter(id=selected_question.id)
+            .first()
+        )
+
     course_title = (
         launch_data.get('context_title')
         or (selected_context.course_title if selected_context and selected_context.course_title else '')
@@ -212,50 +217,24 @@ def question_detail_partial_view(request: HttpRequest, question_id: int):
         if not edit_error:
             # Turn off edit mode after successful save
             is_editing = False
+            # Re-fetch to refresh prefetched related objects (body/files) after mutations.
+            selected_question = (
+                Question.objects
+                .select_related('author', 'last_update', 'course')
+                .prefetch_related('body', 'files')
+                .filter(id=updated_question.id)
+                .first()
+            )
         else:
             is_editing = True
+
+    categories = Question.objects.filter(course=selected_question.course).values_list('category', flat=True).distinct().order_by('category')
 
     html = render_to_string(
         'app/partials/question_detail.html',
         {
             'selected_question': selected_question,
-            'is_editing': is_editing,
-            'edit_error': edit_error,
-        },
-        request=request,
-    )
-    return JsonResponse({
-        'html': html,
-        'question_id': selected_question.id,
-        'title': selected_question.title,
-        'is_editing': is_editing,
-        'error': edit_error,
-    })
-
-
-
-@login_required
-@require_http_methods(['GET', 'POST'])
-def question_detail_partial_view(request: HttpRequest, question_id: int):
-    selected_question = Question.objects.select_related('author', 'last_update', 'course').filter(id=question_id).first()
-    if selected_question is None:
-        return JsonResponse({'error': 'Question not found.'}, status=404)
-
-    is_editing = request.GET.get('edit') == 'true'
-    edit_error = None
-
-    if request.method == 'POST':
-        updated_question, edit_error = handle_question_update(request, selected_question)
-        if not edit_error:
-            # Turn off edit mode after successful save
-            is_editing = False
-        else:
-            is_editing = True
-
-    html = render_to_string(
-        'app/partials/question_detail.html',
-        {
-            'selected_question': selected_question,
+            'categories': categories,
             'is_editing': is_editing,
             'edit_error': edit_error,
         },
