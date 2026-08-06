@@ -98,26 +98,35 @@
     </section>
 
     <!-- Modal Form for Creating Questions -->
-    <dialog id="new-question-modal" class="modal">
+    <dialog id="new-question-modal" class="modal" {% if modal_error %}open{% endif %}>
       <div class="modal-header">
         <h2>Create New Question</h2>
         <button type="button" class="btn-secondary" onclick="document.getElementById('new-question-modal').close()">✕</button>
       </div>
 
+      {% if modal_error %}
+        <div class="error-msg" style="margin: 1rem 0; padding: 0.7rem 0.8rem; border-radius: 10px; background: #fef2f2; border: 1px solid #fecaca; color: #b91c1c;">
+          {{ modal_error }}
+        </div>
+      {% endif %}
+
       <form method="post" enctype="multipart/form-data" action="">
         {% csrf_token %}
         <div class="form-grid">
-          
+
           <div class="form-group">
             <label for="id_title">Question Title *</label>
             <input type="text" id="id_title" name="title" required placeholder="e.g., Kinematics: Two-Body Collision">
+            <small id="title-warning" style="color: #b91c1c; display: none; margin-top: 0.3rem;">
+              A question with this title already exists in this course.
+            </small>
           </div>
-          
-        </div>
 
-        <div class="modal-actions">
-          <button type="button" class="btn-secondary" onclick="document.getElementById('new-question-modal').close()">Cancel</button>
-          <button type="submit" class="btn-primary">Save Question</button>
+          <div class="modal-actions">
+            <button type="button" class="btn-secondary" onclick="document.getElementById('new-question-modal').close()">Cancel</button>
+            <button type="submit" id="submit-question-btn" class="btn-primary">Save Question</button>
+          </div>
+
         </div>
       </form>
     </dialog>
@@ -220,6 +229,49 @@
 
           loadQuestion(questionId, matchingLink.href, false);
         });
+      })();
+    </script>
+
+    <script>
+      (function () {
+        const titleInput = document.getElementById('id_title');
+        const warningEl = document.getElementById('title-warning');
+        const submitBtn = document.getElementById('submit-question-btn');
+        
+        if (!titleInput || !warningEl || !submitBtn) return;
+
+        // Collect all existing question titles from the left panel list
+        const getExistingTitles = () => {
+          const titleSpans = document.querySelectorAll('.question-list-title');
+          return Array.from(titleSpans).map((span) => span.textContent.trim().toLowerCase());
+        };
+
+        const validateTitle = () => {
+          const existingTitles = getExistingTitles();
+          const currentVal = titleInput.value.trim().toLowerCase();
+
+          if (currentVal && existingTitles.includes(currentVal)) {
+            warningEl.style.display = 'block';
+            submitBtn.disabled = true;
+            return false;
+          } else {
+            warningEl.style.display = 'none';
+            submitBtn.disabled = false;
+            return true;
+          }
+        };
+
+        titleInput.addEventListener('input', validateTitle);
+
+        // Prevent submission if duplicate exists
+        const modalForm = titleInput.closest('form');
+        if (modalForm) {
+          modalForm.addEventListener('submit', (e) => {
+            if (!validateTitle()) {
+              e.preventDefault();
+            }
+          });
+        }
       })();
     </script>
 {% endblock %}
